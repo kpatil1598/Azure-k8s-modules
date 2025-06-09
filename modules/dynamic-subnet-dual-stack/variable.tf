@@ -17,10 +17,10 @@ List of CIDRs for the virtual network.
 EOT
 }
 
-variable "availability_zones" {
-  type        = list(string)
-  description = "List of availability zones for subnet distribution"
-}
+ variable "availability_zones" {
+   type        = list(string)
+   description = "List of availability zones for subnet distribution"
+ }
 
 variable "number_private_subnet" {
   type        = number
