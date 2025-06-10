@@ -22,18 +22,17 @@ module "aks" {
     }
   }
 
-#   nodepools = {
-#      ats_nodegroup = {
-#       name                  = "atsnodegroup"
-#       vm_size               = "Standard_B2s"
-#       min_count             = 1
-#       max_count             = 2
-#       enable_auto_scaling   = true
-#       vnet_subnet_id        = values(module.networking.private_subnet_ids)[0]
-#       enable_node_public_ip = false
-#      # zones                 = [1,2]
-#       tags                  = { purpose = "app-workloads" }
-#       node_labels           = { sku = "apps" }
-#     }
-#   }
+  nodepools = {
+     ats_nodegroup = {
+      name                  = "atsnodegroup"
+      vm_size               = "Standard_B2s"
+      min_count             = 1
+      max_count             = 2
+      enable_auto_scaling   = true
+      vnet_subnet_id        = values(module.networking.private_subnet_ids)[0]
+     # zones                 = [1,2]
+      tags                  = { purpose = "app-workloads" }
+      node_labels           = { sku = "apps" }
+    }
+  }
  }
