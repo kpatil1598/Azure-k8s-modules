@@ -44,14 +44,14 @@ locals {
   all_subnets = concat(local.private_subnets, local.public_subnets)
 }
 
-resource "azurerm_virtual_network" "this" {
-  name                = "aks-vnet"
-  location            = var.location
-  resource_group_name = var.resource_group_name
-  address_space       = var.vnet_cidrs
-  tags                = var.tags
- # enable_ipv6         = true
-}
+# resource "azurerm_virtual_network" "this" {
+#   name                = "aks-vnet"
+#   location            = var.location
+#   resource_group_name = var.resource_group_name
+#   address_space       = var.vnet_cidrs
+#   tags                = var.tags
+#  # enable_ipv6         = true
+# }
 
 ## working one ##
 # resource "azurerm_subnet" "this" {
