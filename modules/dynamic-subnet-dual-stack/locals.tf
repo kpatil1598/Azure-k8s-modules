@@ -66,4 +66,13 @@ locals {
   ]
 
   all_subnets = concat(local.private_subnets, local.public_subnets)
+  subnet_map = {
+    for subnet in local.all_subnets :
+    subnet.name => {
+      cidr      = subnet.cidr
+      ipv6_cidr = subnet.ipv6_cidr
+      az        = subnet.az
+      type      = substr(subnet.name, 0, 7) == "private" ? "private" : "public"
+    }
+  }
 }
