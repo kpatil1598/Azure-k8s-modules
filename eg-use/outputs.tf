@@ -21,3 +21,8 @@ output "name" {
 output "private_subnet_ids" {
   value = module.networking.private_subnet_ids
 }
+output "kube_config_raw" {
+  description = "Raw kubeconfig to connect to AKS cluster"
+  value       = module.aks.kube_config_raw
+  sensitive   = true
+}
