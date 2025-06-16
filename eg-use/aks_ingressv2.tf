@@ -53,7 +53,7 @@ data "azurerm_client_config" "current" {}
 # }
 
 module "agic_helm" {
-  source               = "../modules/agic_helm"
+  source               = "../modules/ingress_helm"
     location             = "eastus"
     resource_group_name  = module.resource_group.resource_group_name 
 }
