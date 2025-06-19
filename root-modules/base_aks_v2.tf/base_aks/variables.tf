@@ -35,7 +35,23 @@ variable "nodepools" {
   }))
   default = {}
 }
-variable "ats_node_pool_enable" {
-  type    = bool
-  default = false  
+variable "gateway_id" {
+  type        = string
+  description = "ID of the Application Gateway to use for ingress"
+  default     = null
+}
+variable "enable_auto_scaling" {
+  type        = bool
+  description = "Enable auto-scaling for the default node pool"
+  default     = true
+}
+variable "pod_subnet_id" {
+  type        = string
+  description = "Subnet ID for the pod network"
+  default     = null
+}
+variable "ats_node_pool_enabled" {
+  type        = bool
+  description = "Enable the ATS node pool"
+  default     = false 
 }
