@@ -1,32 +1,88 @@
-resource "kubernetes_namespace" "karpenter" {
-  metadata {
-    name = var.namespace
-  }
-}
-
 resource "helm_release" "karpenter" {
   name       = "karpenter"
-  namespace  = kubernetes_namespace.karpenter.metadata[0].name
-  repository = "oci://public.ecr.aws/karpenter"
-  chart      = "karpenter"
-  version    = var.chart_version
+  namespace  = "kube-system"
+  #repository = "oci://mcr.microsoft.com/aks/karpenter"
+  chart      = "oci://mcr.microsoft.com/aks/karpenter/karpenter"
+  version    = var.karpenter_version
+  create_namespace = true
 
-  values = [
-    yamlencode({
-      settings = {
-        clusterName = var.cluster_name
-        clusterEndpoint = var.cluster_endpoint
-      }
+  set {
+    name  = "settings.clusterName"
+    value = var.cluster_name
+  }
 
-      serviceAccount = {
-        annotations = {
-          "eks.amazonaws.com/role-arn" = var.karpenter_irsa_role_arn
-        }
-        name = var.service_account_name
-        create = true
-      }
-    })
+  set {
+    name  = "settings.azure.subscriptionId"
+    value = var.subscription_id
+  }
+
+  set {
+    name  = "settings.azure.tenantId"
+    value = data.azurerm_client_config.current.tenant_id
+  }
+
+  set {
+    name  = "settings.azure.resourceGroup"
+    value = var.resource_group_name
+  }
+  set {
+    name  = "settings.kubeletBootstrapToken"
+    value = var.kubelet_bootstrap_token
+  }
+
+  set {
+    name  = "settings.azure.nodeResourceGroup"
+    value = var.node_resource_group
+  }
+  
+
+  set {
+    name  = "settings.azure.userAssignedIdentityID"
+    value = azurerm_user_assigned_identity.karpenter.id
+  }
+
+  set {
+    name  = "controller.resources.requests.cpu"
+    value = "100m" # 100 milliCPU neee to extend
+  }
+
+  set {
+    name  = "controller.resources.requests.memory"
+    value = "256Mi" # 200 milliBytes neee to extend
+  }
+
+  set {
+    name  = "controller.resources.limits.cpu"
+    value = "200m" # 200 milliCPU neee to extend
+  }
+
+  set {
+    name  = "controller.resources.limits.memory"
+    value = "512Mi" # 512 milliBytes neee to extend
+  }
+  set {
+    name  = "controller.serviceAccount.annotations.\"azure.workload.identity/client-id"
+    value = "19249f55-3830-488e-a37e-513754a5fe50"
+  }
+  set {
+  name  = "settings.clusterEndpoint"
+  value = var.aks_api_server
+  }
+  set {
+    name  = "settings.azure.vnet-Subnet-ID"
+    value = "/subscriptions/f7c3be65-2edf-420b-9d7b-25bca67f650c/resourceGroups/rg-aks-dev/providers/Microsoft.Network/virtualNetworks/aks-vnet/subnets/private-subnet-1"
+  }
+  set {
+    name  = "settings.azure.federatedIdentityCredentialID"
+    value = azurerm_federated_identity_credential.karpenter_federated_identity.id
+  }
+  set {
+    name  = "settings.kubeletBootstrapToken"
+    value = var.kubelet_bootstrap_token
+  }
+  depends_on = [
+    azurerm_user_assigned_identity.karpenter,
+    #module.karpenter_role_assignment,
+    azurerm_federated_identity_credential.karpenter_federated_identity
   ]
-
-  depends_on = [kubernetes_namespace.karpenter]
 }
