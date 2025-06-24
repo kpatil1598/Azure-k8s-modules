@@ -13,6 +13,6 @@ module "networking" {
   availability_zones       = ["1", "2", "3"]
   tags = {
     environment = "dev"
-    owner       = "chinmay"
+    owner       = "Nitin"
   }
 }
