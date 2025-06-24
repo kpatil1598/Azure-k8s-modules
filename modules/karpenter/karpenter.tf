@@ -1,0 +1,122 @@
+# resource "helm_release" "karpenter" {
+#   name       = "karpenter"
+#   namespace  = "kube-system"
+#   #repository = "oci://mcr.microsoft.com/aks/karpenter"
+#   chart      = "oci://mcr.microsoft.com/aks/karpenter/karpenter"
+#   version    = var.karpenter_version
+#   create_namespace = true
+
+#   set {
+#     name  = "settings.clusterName"
+#     value = var.cluster_name
+#   }
+
+#   set {
+#     name  = "settings.azure.subscriptionId"
+#     value = var.subscription_id
+#   }
+
+#   set {
+#     name  = "settings.azure.tenantId"
+#     value = data.azurerm_client_config.current.tenant_id
+#   }
+
+#   set {
+#     name  = "settings.azure.resourceGroup"
+#     value = var.resource_group_name
+#   }
+#   set {
+#     name  = "settings.kubeletBootstrapToken"
+#     value = var.kubelet_bootstrap_token
+#   }
+
+#   set {
+#     name  = "settings.azure.nodeResourceGroup"
+#     value = var.node_resource_group
+#   }
+  
+
+#   set {
+#     name  = "settings.azure.userAssignedIdentityID"
+#     value = azurerm_user_assigned_identity.karpenter.id
+#   }
+
+#   set {
+#     name  = "controller.resources.requests.cpu"
+#     value = "100m" # 100 milliCPU neee to extend
+#   }
+
+#   set {
+#     name  = "controller.resources.requests.memory"
+#     value = "256Mi" # 200 milliBytes neee to extend
+#   }
+
+#   set {
+#     name  = "controller.resources.limits.cpu"
+#     value = "200m" # 200 milliCPU neee to extend
+#   }
+
+#   set {
+#     name  = "controller.resources.limits.memory"
+#     value = "512Mi" # 512 milliBytes neee to extend
+#   }
+#   set {
+#   name  = "controller.serviceAccount.annotations.azure\\.workload\\.identity/client-id"
+#   value = azurerm_user_assigned_identity.karpenter.client_id
+# }
+#   set {
+#   name  = "settings.clusterEndpoint"
+#   value = var.aks_api_server
+#   }
+#   set {
+#     name  = "settings.vnet-subnet-id"
+#     value = "/subscriptions/f7c3be65-2edf-420b-9d7b-25bca67f650c/resourceGroups/rg-aks-dev/providers/Microsoft.Network/virtualNetworks/aks-vnet/subnets/private-subnet-1"
+#   }
+#   set {
+#     name  = "settings.azure.federatedIdentityCredentialID"
+#     value = azurerm_federated_identity_credential.karpenter_federated_identity.id
+#   }
+#   # set {
+#   #   name  = "settings.kubeletBootstrapToken"
+#   #   value = var.kubelet_bootstrap_token
+#   # }
+#   depends_on = [
+#     azurerm_user_assigned_identity.karpenter,
+#     #module.karpenter_role_assignment,
+#     azurerm_federated_identity_credential.karpenter_federated_identity
+#   ]
+# }
+resource "helm_release" "karpenter" {
+  name       = "karpenter"
+  namespace  = "karpenter"
+  repository = "https://charts.karpenter.sh"
+  chart      = "karpenter"
+  create_namespace = true
+
+  # Required settings for Azure
+  set {
+    name  = "settings.clusterName"
+    value = var.cluster_name
+  }
+
+  set {
+    name  = "settings.clusterEndpoint"
+    value = var.aks_api_server
+  }
+
+  set {
+    name  = "settings.aws" # Must explicitly disable AWS logic
+    value = "false"
+  }
+
+  set {
+    name  = "controller.cloudProvider"
+    value = "azure"
+  }
+
+  set {
+    name  = "controller.serviceAccount.annotations.azure\\.workload\\.identity/client-id"
+    value = azurerm_user_assigned_identity.karpenter.client_id
+  }
+  depends_on = [ azurerm_federated_identity_credential.karpenter_federated_identity  ] # Ensure the federated identity is created before the Helm release 
+}
