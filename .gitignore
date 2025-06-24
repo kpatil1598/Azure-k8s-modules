@@ -2,3 +2,5 @@
 *.tfstate.backup
 .terraform/
 terraform.tfvars
+# Local .terraform directories
+.terraform.lock.hcl     
