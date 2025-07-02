@@ -1,4 +1,4 @@
-# Configure provider for the new subscription
+#Configure provider for the new subscription
 provider "azurerm" {
   alias           = "newsub"
   features{}

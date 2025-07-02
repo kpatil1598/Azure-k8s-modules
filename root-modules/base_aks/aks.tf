@@ -26,10 +26,12 @@ resource "azurerm_kubernetes_cluster" "aks" {
     network_plugin    = "azure"
     ip_versions       = ["IPv4","IPv6"]
     load_balancer_sku = "standard"
-    network_plugin_mode = "overlay" 
+    network_plugin_mode = "overlay" # Use "overlay" for dual-stack support
+    network_policy    = "cilium" # Uncomment if you want to use Cilium as the network policy
     #docker_bridge_cidr  = "172.17.0.1/16"
     service_cidr   = "10.1.0.0/20"
     dns_service_ip = "10.1.0.10"
+    network_data_plane = "cilium"
   }
   
   #  ingress_application_gateway {

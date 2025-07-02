@@ -5,10 +5,10 @@ resource "azurerm_kubernetes_cluster_node_pool" "ats_nodegroup" {
   kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
   vm_size               = "Standard_B2s"
 
-  enable_auto_scaling   = true
+  #enable_auto_scaling   = true
   min_count             = 1
   max_count             = 2
-  node_count            = 1
+  #node_count            = 1
 
   mode                  = "User"
   os_type               = "Linux"
@@ -17,7 +17,6 @@ resource "azurerm_kubernetes_cluster_node_pool" "ats_nodegroup" {
   #enable_host_encryption = true # Optional, enables disk encryption
 
   vnet_subnet_id        = var.vnet_subnet_id
-  enable_node_public_ip = false
 
   node_labels = {
     nodepool = "ats" # This label can be used to identify the node pool /need change

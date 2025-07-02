@@ -37,5 +37,15 @@ output "kube_config_raw" {
 # }
 output "issuer_url" {
   description = "Issuer URL for the AKS cluster"
-  value       = module.aks.issuer_url  
+  value       = module.aks  
+  sensitive = true
 }
+output "principal_id" {
+  description = "Managed identity for AKS cluster"
+  value       = module.aks.identity_principal_id  
+}
+# output "identity_id" {
+#   description = "Managed identity ID for AKS cluster"
+#   value       = module.aks.identity_id  
+  
+# }

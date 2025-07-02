@@ -8,8 +8,8 @@ module "networking" {
   ipv4_subnet_mask_public  = 26
   ipv6_subnet_mask_private = 64
   ipv6_subnet_mask_public  = 64
-  number_private_subnet    = 3
-  number_public_subnet     = 1
+  number_private_subnet    = 7
+  number_public_subnet     = 3
   availability_zones       = ["1", "2", "3"]
   tags = {
     environment = "dev"
