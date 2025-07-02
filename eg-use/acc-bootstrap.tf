@@ -1,4 +1,5 @@
 # module "account_bootstrap" {
+<<<<<<< Updated upstream
 #   source = "C:\\Users\\chava\\Desktop\\k8s-module\\root-modules\\bootstrap"
 
 #   account_code           = "biztools"
@@ -7,4 +8,15 @@
 #   invoice_section_name   = "7VK4-NVSP-PJA-PGB"
 #   subscription_name      = "BizTools Subscription"
 #   location = "East US"
+=======
+#   source = "../root-modules/bootstrap"
+
+#   account_code           = "biztools"
+#   billing_account_name   = "" # 
+#   billing_profile_name   = ""
+#   invoice_section_name   = ""
+#   subscription_name      = "BizTools Subscription"
+#   location = "East US"
+#     resource_group_name    = "BizTools-ResourceGroup-tfstate"
+>>>>>>> Stashed changes
 # }
