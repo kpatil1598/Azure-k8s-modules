@@ -61,7 +61,7 @@ variable "subnet_id" {
 variable "karpenter_version" {
   description = "Version of Karpenter Helm chart"
   type        = string
-  default     = "0.7.0"
+  default     = "0.36.1"
 }
 
 variable "karpenter_provider_version" {
@@ -72,22 +72,32 @@ variable "karpenter_provider_version" {
 variable "issuer_url" {
   description = "Issuer URL for the Azure Workload Identity"
   type        = string
-  
+
 }
 variable "kubelet_bootstrap_token" {
   description = "Kubelet bootstrap token for Karpenter"
   type        = string
-  default     = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkltdGhERHkyMF80M3FmRk1YOXBzSDE2UGdVUkF5NlZidHpyaTM5ZUhITTAifQ.eyJhdWQiOlsiaHR0cHM6Ly9lYXN0dXMub2ljLnByb2QtYWtzLmF6dXJlLmNvbS8zMjQ2MjgxMC05NzNkLTRkOWEtYTE5NS1mMDFiMTM1YWU3YjUvNjJjODQ4ZmQtOGU1OC00YTg1LTkwOGMtNzQ5Zjc0ZjBiOGE5LyIsImh0dHBzOi8vYWtzY2x1c3Rlci1hYWt5Z25qMy5oY3AuZWFzdHVzLmF6bWs4cy5pbyIsIlwiYWtzY2x1c3Rlci1hYWt5Z25qMy5oY3AuZWFzdHVzLmF6bWs4cy5pb1wiIl0sImV4cCI6MTc1MDI4MzE5MywiaWF0IjoxNzUwMjc5NTkzLCJpc3MiOiJodHRwczovL2Vhc3R1cy5vaWMucHJvZC1ha3MuYXp1cmUuY29tLzMyNDYyODEwLTk3M2QtNGQ5YS1hMTk1LWYwMWIxMzVhZTdiNS82MmM4NDhmZC04ZTU4LTRhODUtOTA4Yy03NDlmNzRmMGI4YTkvIiwianRpIjoiNGI5YjliYjMtZjQ0OC00NDM0LThjZjktOGFlNmQxYzkwYjEwIiwia3ViZXJuZXRlcy5pbyI6eyJuYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsInNlcnZpY2VhY2NvdW50Ijp7Im5hbWUiOiJrYXJwZW50ZXIiLCJ1aWQiOiIwMGQ1NGNhMy1iMWRhLTRlZTMtYjg2OC1jNDc2YzIyYjNhZDgifX0sIm5iZiI6MTc1MDI3OTU5Mywic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50Omt1YmUtc3lzdGVtOmthcnBlbnRlciJ9.QhV0VsbzEshffpe4LNkSgXcUoy-vEELUTwpoqwOn6wthiKoZRpyLPFXVa6n3Sia0Mn3kigY6ynY92n8wWaGHZqSQWGFoZ0jstX_M4-Gv69RH5_OjCj7h4_IO-IZE5jHNxvxuvNpyqCp1CpRoAHg7HF_FEdflwvS6YSFtJoz1HZVBmOkbXsE-iS9hjPKqrUAYbNx6YpcF4kBrTq1zxWeF55WeJ8Fx-0JowkNqRMkRHBopwwYvjJ659DxUPx_vgxeh2AC_YYaWfdJf3JOu7OCoxFimNwh99L9Y4YGjS02ROT7tdqqDa_T-MPwXsGD6ewFiJuyhq87EaxX2GsM_qA2qdZ-PK0FbVLQ1baHAW4_n-iuaXqtDqduPfU0D18QfevH-dOpszUDleTKMO4sOJM3-JiJ6W3TyyaIL-7X-wSW39Dj65V2Ia5-_ZcepHgTSK--gKVu9I8Z9OaMpBLYTnHyAlAlxqkyxyn9I9irhHkSJYsZqu1fxMyDBsghcor3jrO-ZjjVR0PX_wBPQiSrykxXrrC-sga3TsFjdRL3jZcqFid62jThbXr6tYTyuuIdjOVvryFpaa7njX4DypVBjs9uO__HFKQQEh5g0cS3W-J43YLNbGXWnsaOXfSmL_LfVg9FPRcPw6xYAGAy5WQSN7c2Z9Vl52-XRXXmcXsiETEepOgY"
+  default     = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjB4OEU1TUVtSUp2bmJEM2ladGJmemUxenJQTnFyN3RQd2ZVeTctV05yRW8ifQ.eyJhdWQiOlsiaHR0cHM6Ly9lYXN0dXMub2ljLnByb2QtYWtzLmF6dXJlLmNvbS8xNjU1MWZmMy00YmIyLTQ0YzctOGI0Yi01YTBkMTYyZTI0ZWYvOTVmZThkNzMtYzQxMC00MzZhLTg4OGYtNmYxMTVjY2QzNDJiLyIsImh0dHBzOi8vYWtzY2x1c3Rlci10d2F1d3IzNC5oY3AuZWFzdHVzLmF6bWs4cy5pbyIsIlwiYWtzY2x1c3Rlci10d2F1d3IzNC5oY3AuZWFzdHVzLmF6bWs4cy5pb1wiIl0sImV4cCI6MTc1MTIxNjQwMSwiaWF0IjoxNzUxMTMwMDAxLCJpc3MiOiJodHRwczovL2Vhc3R1cy5vaWMucHJvZC1ha3MuYXp1cmUuY29tLzE2NTUxZmYzLTRiYjItNDRjNy04YjRiLTVhMGQxNjJlMjRlZi85NWZlOGQ3My1jNDEwLTQzNmEtODg4Zi02ZjExNWNjZDM0MmIvIiwianRpIjoiZWMxZTJlYzMtOWRhOC00NDk4LWI1ZjYtZjNlYTFlZWJiNjk5Iiwia3ViZXJuZXRlcy5pbyI6eyJuYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsInNlcnZpY2VhY2NvdW50Ijp7Im5hbWUiOiJrYXJwZW50ZXIiLCJ1aWQiOiJlNWJlZGE3Mi1jM2RhLTRmZmItYjc0Mi00ZGE0ODUxYmEwY2UifX0sIm5iZiI6MTc1MTEzMDAwMSwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50Omt1YmUtc3lzdGVtOmthcnBlbnRlciJ9.iikabGgnxmy6coUbHhE0BGtoPqZM6gljDAIyFfPqEx_rg63hCCSJfMzS9SoQny3cXNUYVHZzsh2--Yabve_-n9DqEUxkkesSzbX-ElUeEUtRnteS5_Qtb7GkyJjj3S31SZtw0rxepCNlS5FWi05IEw8HF_3iryOq63FtaJxriCpTuGGJtVeQF2b6hLYAI9Lab95zAWmP1NyoH-Gz0IvhkOrhs7e7jRUs8TJqMaoUGi71iBq4qCVrKNiewvTPgyI1zDhhJU8Vb2j9pRsRVujf2JpEawJMj2Z2BTC43JIAzc0-Jo9uBkGSRXTYdVVaJ3KaGIxxvOnXuKUBL_RM4oKduIqVJrtQGfQsAdII6LpUbKhwCS-KQLF1itAwtQ_GNMEhy-5NYGvlikYNxJY-rOwoYsrT7HQnqQclO0_7AeAA_NaevjO-uX-1-yRMDmCj-KH0UvRRRXoR0nCz4F5M8pUlrTmquzFYFgteK2D8h9A3scowHzh3oNzAPxBN03qThmtFEkJCMSdjf3GDaP-O3sQqO0XK92j_Tio0PnossLScWSMG1mvYR33W4Bi2MRrKf5NS9Sv4wgpM2dLQZcKxpwZ7GaM0drW1GpL4NHAhEAae41n7UewFnGZ6Nm9z74o7VQJ32cpRtbmurO4RWX7uAOGzJ7PGMtRcSG6zYb8AlRkqd2M"
 }
-variable "node_resource_group_id" {
-  description = "The resource group where the AKS node resources are managed"
+
+variable "ssh_public_key" {
+  description = "SSH public key for accessing the VMs created by Karpenter"
   type        = string
-  default     = null
-  
+  default     = ""
 }
-# variable "node_resource_group_id" {
-#   description = "The resource group ID where the AKS node resources are managed"
-#   type        = string
-#   default     = null
-  
-# }
+
+variable "vnet_name" {
+  description = "Name of the virtual network"
+  type        = string
+  default     = "aks-vnet"
+}
+
+variable "subnet_name" {
+  description = "Name of the subnet"
+  type        = string
+  default     = "private-subnet-1"
+}
+# Output the public key
+output "public_key_openssh" {
+  value = tls_private_key.this.public_key_openssh
+}

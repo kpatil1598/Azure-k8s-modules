@@ -1,8 +1,8 @@
 # NAT Gateway
 resource "azurerm_nat_gateway" "this" {
   name                = "nat-gateway"
-  location            = var.location
-  resource_group_name = var.resource_group_name
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
   sku_name            = "Standard"
 
   tags = var.tags
@@ -11,8 +11,8 @@ resource "azurerm_nat_gateway" "this" {
 # Public IP for NAT Gateway
 resource "azurerm_public_ip" "nat_ip" {
   name                = "nat-gateway-ip"
-  location            = var.location
-  resource_group_name = var.resource_group_name
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
   allocation_method   = "Static"
   sku                 = "Standard"
 

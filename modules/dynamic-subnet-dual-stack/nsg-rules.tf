@@ -9,7 +9,7 @@ resource "azurerm_network_security_rule" "allow_inbound_http_https_ssh" {
   destination_port_ranges     = ["22", "80", "443"] # Adjust as needed
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
-  resource_group_name         = var.resource_group_name
+  resource_group_name         = azurerm_resource_group.this.name
   network_security_group_name = azurerm_network_security_group.public.name
 }
 # resource "azurerm_network_security_rule" "appgw_infra" {
@@ -37,6 +37,6 @@ resource "azurerm_network_security_rule" "allow_internal_traffic" {
   destination_port_ranges     = ["22", "80", "443"] # Adjust as needed
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
-  resource_group_name         = var.resource_group_name
+  resource_group_name         = azurerm_resource_group.this.name
   network_security_group_name = azurerm_network_security_group.private.name
 }

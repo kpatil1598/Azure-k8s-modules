@@ -1,16 +1,16 @@
 # Private NSG
 resource "azurerm_network_security_group" "private" {
   name                = "nsg-private"
-  location            = var.location
-  resource_group_name = var.resource_group_name
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
   tags                = var.tags
 }
 
 # Public NSG
 resource "azurerm_network_security_group" "public" {
   name                = "nsg-public"
-  location            = var.location
-  resource_group_name = var.resource_group_name
+  location            = azurerm_resource_group.this.location
+  resource_group_name =azurerm_resource_group.this.name
   tags                = var.tags
 }
 

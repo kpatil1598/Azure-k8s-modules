@@ -24,7 +24,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
   network_profile {
     network_plugin    = "azure"
-    ip_versions       = ["IPv4","IPv6"]
+    ip_versions       = ["IPv4"]
     load_balancer_sku = "standard"
     network_plugin_mode = "overlay" # Use "overlay" for dual-stack support
     network_policy    = "cilium" # Uncomment if you want to use Cilium as the network policy

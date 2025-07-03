@@ -5,8 +5,8 @@
 # Public Route Table (for public subnets)
 resource "azurerm_route_table" "public" {
   name                = "rt-public"
-  location            = var.location
-  resource_group_name = var.resource_group_name
+  location            = azurerm_resource_group.this.location
+  resource_group_name =azurerm_resource_group.this.name
 
   route {
     name           = "internet-route"
@@ -20,8 +20,8 @@ resource "azurerm_route_table" "public" {
 # Private Route Table (no explicit internet route here)
 resource "azurerm_route_table" "private" {
   name                = "rt-private"
-  location            = var.location
-  resource_group_name = var.resource_group_name
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
 
   tags = var.tags
 }

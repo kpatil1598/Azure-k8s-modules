@@ -1,46 +1,85 @@
-resource "azurerm_user_assigned_identity" "karpenter" {
-  name                = "karpenter-uami"
-  resource_group_name = var.resource_group_name
-  location            = var.location
-}
-
-# module "karpenter_role_assignment" {
-#   source = "C:\\Users\\chava\\Desktop\\k8s-module\\modules\\role_assignment"
-
-#   assignments = [
-#     {
-#       scope        = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/rg-aks-dev"
-#       role_name    = "Contributor"
-#       principal_id = azurerm_user_assigned_identity.karpenter.principal_id
-#      # principal_id = "chinmaychavan24_outlook.com#EXT#@chinmaychavan24outlook.onmicrosoft.com"
-#     },
-#     {
-#       scope        = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/rg-aks-dev"
-#       role_name    = "Network Contributor"
-#       principal_id = azurerm_user_assigned_identity.karpenter.principal_id
-#     },
-#     {
-#       scope        ="/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/rg-aks-dev/providers/Microsoft.Network/virtualNetworks/aks-vnet/subnets/private-subnet-1"
-#       role_name    = "managed identity operator"
-#       principal_id = azurerm_user_assigned_identity.karpenter.principal_id
-#     }
-#   ]
-#   depends_on = [ azurerm_user_assigned_identity.karpenter ]
+# resource "azurerm_user_assigned_identity" "karpenter" {
+#   name                = "karpenter-uami"
+#   resource_group_name = var.resource_group_name
+#   location            = var.location
 # }
-resource "azurerm_federated_identity_credential" "karpenter_federated_identity" {
-  name                = "karpenter-federated-identity"
-  resource_group_name = var.resource_group_name
-  audience            = ["api://AzureADTokenExchange"]
-  issuer              = var.issuer_url # Replace with your issuer URL
-  # Example: "https://sts.windows.net/{tenant_id}/"
-  parent_id           = azurerm_user_assigned_identity.karpenter.id
-  # The parent_id should be the ID of the user-assigned identity
-  #subject             = "system:serviceaccount:kube-system:karpenter"
-  subject = "system:serviceaccount:karpenter:karpenter"
-  depends_on = [ azurerm_user_assigned_identity.karpenter ]
-}
-resource "azurerm_role_assignment" "karpenter_contributor" {
-  scope                = var.node_resource_group_id
-  role_definition_name = "Contributor"
-  principal_id         = azurerm_user_assigned_identity.karpenter.principal_id
-}
+
+# # Federated Identity Credential
+# resource "azurerm_federated_identity_credential" "karpenter_federated_identity" {
+#   name                = "karpenter-federated-identity"
+#   resource_group_name = var.resource_group_name
+#   audience            = ["api://AzureADTokenExchange"]
+#   issuer              = var.issuer_url # Should be your AKS OIDC issuer URL
+#   parent_id           = azurerm_user_assigned_identity.karpenter.id
+#   subject             = "system:serviceaccount:kube-system:karpenter"
+  
+#   depends_on = [azurerm_user_assigned_identity.karpenter]
+# }
+
+# # Role Assignments - Fixed scopes and added missing roles
+# resource "azurerm_role_assignment" "karpenter_reader" {
+#   scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.resource_group_name}"
+#   role_definition_name = "Reader"
+#   principal_id         = azurerm_user_assigned_identity.karpenter.principal_id
+# }
+
+# resource "azurerm_role_assignment" "karpenter_network_contributor_main" {
+#   scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.resource_group_name}"
+#   role_definition_name = "Network Contributor"
+#   principal_id         = azurerm_user_assigned_identity.karpenter.principal_id
+# }
+
+# resource "azurerm_role_assignment" "karpenter_vm_contributor" {
+#   scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.node_resource_group}"
+#   role_definition_name = "Virtual Machine Contributor"
+#   principal_id         = azurerm_user_assigned_identity.karpenter.principal_id
+# }
+
+# resource "azurerm_role_assignment" "karpenter_network_contributor_node" {
+#   scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.node_resource_group}"
+#   role_definition_name = "Network Contributor"
+#   principal_id         = azurerm_user_assigned_identity.karpenter.principal_id
+# }
+
+# resource "azurerm_role_assignment" "karpenter_managed_identity_operator" {
+#   scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.node_resource_group}"
+#   role_definition_name = "Managed Identity Operator"
+#   principal_id         = azurerm_user_assigned_identity.karpenter.principal_id
+# }
+
+# # CRITICAL: Network Contributor at VNET level (not just subnet)
+# resource "azurerm_role_assignment" "karpenter_vnet_network_contributor" {
+#   scope                = data.azurerm_virtual_network.aks_vnet.id
+#   role_definition_name = "Network Contributor"
+#   principal_id         = azurerm_user_assigned_identity.karpenter.principal_id
+# }
+
+# # Reader at VNET level for read operations
+# resource "azurerm_role_assignment" "karpenter_vnet_reader" {
+#   scope                = data.azurerm_virtual_network.aks_vnet.id
+#   role_definition_name = "Reader"
+#   principal_id         = azurerm_user_assigned_identity.karpenter.principal_id
+# }
+
+# # Network Contributor at subnet level
+# resource "azurerm_role_assignment" "karpenter_subnet_network_contributor" {
+#   scope                = "${data.azurerm_virtual_network.aks_vnet.id}/subnets/${var.subnet_name}"
+#   role_definition_name = "Network Contributor"
+#   principal_id         = azurerm_user_assigned_identity.karpenter.principal_id
+# }
+
+# # Add time delay to ensure role assignments propagate
+# resource "time_sleep" "wait_for_rbac" {
+#   depends_on = [
+#     azurerm_role_assignment.karpenter_reader,
+#     azurerm_role_assignment.karpenter_network_contributor_main,
+#     azurerm_role_assignment.karpenter_vm_contributor,
+#     azurerm_role_assignment.karpenter_network_contributor_node,
+#     azurerm_role_assignment.karpenter_managed_identity_operator,
+#     azurerm_role_assignment.karpenter_vnet_network_contributor,
+#     azurerm_role_assignment.karpenter_vnet_reader,
+#     azurerm_role_assignment.karpenter_subnet_network_contributor,
+#     azurerm_federated_identity_credential.karpenter_federated_identity
+#   ]
+#   create_duration = "60s"
+# }
