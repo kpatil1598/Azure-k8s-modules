@@ -12,7 +12,7 @@
 # }
 output "name" {
   value = module.resource_group.resource_group_name
-  
+
 }
 # output "subnet_ids" {
 #   description = "IDs of all created subnets"

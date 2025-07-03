@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: inflate
+spec:
+  containers:
+  - name: inflate
+    image: public.ecr.aws/eks-distro/kubernetes/pause:3.2
+    resources:
+      requests:
+        cpu: "4"
+        memory: "8Gi"

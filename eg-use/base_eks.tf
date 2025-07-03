@@ -4,7 +4,7 @@
 # }
 
 module "aks" {
-  source              = "..\\root-modules\\base_aks"
+  source              = "../root-modules/base_aks"
   resource_group_name = module.resource_group.resource_group_name
   location            = "eastus"
   cluster_name        = "aks-cluster"
@@ -16,23 +16,24 @@ module "aks" {
     name       = "system"
     vm_size    = "Standard_B2s"
     node_count = 1
-   # zones      = [1,3]
-    upgrade_settings ={
-      max_surge = "1"           # Minimal surge capacity during upgrades
+    # zones      = [1,3]
+    upgrade_settings = {
+      max_surge = "1" # Minimal surge capacity during upgrades
     }
   }
 
   nodepools = {
-     ats_nodegroup = {
+    ats_nodegroup = {
       name                  = "atsnodegroup"
       vm_size               = "Standard_B2s"
       min_count             = 1
       max_count             = 2
       enable_auto_scaling   = true
       vnet_subnet_id        = values(module.networking.private_subnet_ids)[0]
-     # zones                 = [1,2]
-      tags                  = { purpose = "app-workloads" }
-      node_labels           = { sku = "apps" }
+      enable_node_public_ip = false
+      # zones                 = [1,2]
+      tags        = { purpose = "app-workloads" }
+      node_labels = { sku = "apps" }
     }
   }
- }
+}

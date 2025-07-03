@@ -13,14 +13,12 @@
 #   required_version = ">= 1.0.0"
 # }
 
-provider "helm" {
-  kubernetes {
-    config_path    = "~/.kube/config"
-    config_context = ""
-  }
-}
-
-data "azurerm_client_config" "current" {}
+# provider "helm" {
+#   kubernetes {
+#     config_path    = "~/.kube/config"
+#     config_context = ""
+#   }
+# }
 
 # data "azurerm_kubernetes_cluster" "aks" {
 #   name                = "aks-cluster"
@@ -53,7 +51,7 @@ data "azurerm_client_config" "current" {}
 # }
 
 module "agic_helm" {
-  source               = "../modules/ingress_helm"
-    location             = "eastus"
-    resource_group_name  = module.resource_group.resource_group_name 
+  source              = "../modules/ingress_helm"
+  location            = "eastus"
+  resource_group_name = module.resource_group.resource_group_name
 }
