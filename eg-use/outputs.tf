@@ -11,7 +11,7 @@ output "public_subnet_ipv6_cidrs" {
   value = module.networking.public_subnet_ipv6_cidrs
 }
 output "name" {
-  value = module.resource_group.resource_group_name
+  value = module.networking.resource_group_name
 
 }
 # output "subnet_ids" {
