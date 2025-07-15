@@ -1,7 +1,7 @@
 
 module "networking" {
   source                   = "C:\\Users\\chava\\Desktop\\k8s-module\\modules\\dynamic-subnet-dual-stack"
-  resource_group_name      = module.resource_group.resource_group_name
+  resource_group_name      = "rg-aks-dev-new"
   location                 = "eastus"
   vnet_cidrs               = ["10.0.0.0/20", "fd00::/48"]
   ipv4_subnet_mask_private = 23

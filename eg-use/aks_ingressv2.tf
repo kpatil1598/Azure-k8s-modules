@@ -23,8 +23,8 @@
 # data "azurerm_client_config" "current" {}
 
 
-# module "agic_helm" {
-#   source               = "C:\\Users\\chava\\Desktop\\k8s-module\\modules\\agic_helm"
-#     location             = "eastus"
-#     resource_group_name  = module.resource_group.resource_group_name 
-# }
+module "agic_helm" {
+  source               = "C:\\Users\\chava\\Desktop\\k8s-module\\modules\\agic_helm"
+    location             = module.networking.resource_group_location  
+    resource_group_name  = module.networking.resource_group_name 
+}

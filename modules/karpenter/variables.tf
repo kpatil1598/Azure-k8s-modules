@@ -97,7 +97,7 @@ variable "subnet_name" {
   type        = string
   default     = "private-subnet-1"
 }
-# Output the public key
-output "public_key_openssh" {
-  value = tls_private_key.this.public_key_openssh
-}
+# # Output the public key
+# output "public_key_openssh" {
+#   value = tls_private_key.this.public_key_openssh
+# }

@@ -14,7 +14,7 @@ terraform {
     }
     kubectl = {
       source  = "gavinbunney/kubectl"
-      version = ">= 1.14.0"
+      version = "~> 1.14.0"
     }  
   }
 }
@@ -50,11 +50,18 @@ provider "kubectl" {
   config_path = "~/.kube/config"
 }
 
-# terraform {
-#   backend "azurerm" {
-#     resource_group_name  = "tfstate"
-#     storage_account_name = "terraformtfstate2025"
-#     container_name       = "terrafom-tfstate-aks"
-#     key                  = "terraform.tfstate"
-#   }
+# provider "kubectl" {
+#   host                   = var.kubernetes_host
+#   client_certificate     = base64decode(var.kubernetes_client_certificate)
+#   client_key             = base64decode(var.kubernetes_client_key)
+#   cluster_ca_certificate = base64decode(var.kubernetes_cluster_ca_certificate)
 # }
+
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "tfstate"
+    storage_account_name = "terraformtfstate2025"
+    container_name       = "terrafom-tfstate-aks"
+    key                  = "backend.tfstate"
+  }
+}

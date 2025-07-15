@@ -1,16 +1,16 @@
-terraform {
-  required_providers {
-    tls = {
-      source  = "hashicorp/tls"
-      version = "~> 4.0"
-    }
-  }
-}
+# terraform {
+#   required_providers {
+#     tls = {
+#       source  = "hashicorp/tls"
+#       version = "~> 4.0"
+#     }
+#   }
+# }
 
-provider "tls" {}
+# provider "tls" {}
 
-# Generate SSH key pair
-resource "tls_private_key" "this" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
+# # Generate SSH key pair
+# resource "tls_private_key" "this" {
+#   algorithm = "RSA"
+#   rsa_bits  = 4096
+# }
