@@ -37,5 +37,5 @@ variable "nodepools" {
 }
 variable "ats_node_pool_enable" {
   type    = bool
-  default = false  
+  default = false
 }

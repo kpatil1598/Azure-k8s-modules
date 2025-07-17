@@ -1,7 +1,7 @@
 # variable "internal_ipv4" {
 #     type        = string
 #     description = "Internal IPv4 address for the NGINX Ingress Controller"
-  
+
 # }
 variable "tags" {
   type        = map(string)

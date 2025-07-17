@@ -53,5 +53,5 @@ variable "pod_subnet_id" {
 variable "ats_node_pool_enabled" {
   type        = bool
   description = "Enable the ATS node pool"
-  default     = false 
+  default     = false
 }

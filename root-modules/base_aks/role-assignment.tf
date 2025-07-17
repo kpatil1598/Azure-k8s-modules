@@ -1,3 +1,5 @@
+data "azurerm_client_config" "current" {}
+
 module "network_contributor_assignment" {
   source = "../../modules/role_assignment"
 

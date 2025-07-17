@@ -10,10 +10,10 @@ resource "azurerm_role_definition" "custom" {
   }
 
   # Name of the custom role
-  name        = each.value.name
+  name = each.value.name
 
   # Scope at which this role is defined (e.g., subscription or resource group)
-  scope       = each.value.scope
+  scope = each.value.scope
 
   # Optional: Description of the custom role
   # If not provided, defaults to null
@@ -21,7 +21,7 @@ resource "azurerm_role_definition" "custom" {
 
   # Define permissions granted by the custom role
   permissions {
-    actions     = each.value.actions                 # Allowed actions
+    actions     = each.value.actions                    # Allowed actions
     not_actions = lookup(each.value, "not_actions", []) # Optional: actions to explicitly deny
   }
 
@@ -34,15 +34,15 @@ resource "azurerm_role_definition" "custom" {
 # --------------------------------------------
 data "azurerm_role_definition" "lookup" {
   # Loop over each assignment in var.assignments
-  # Only include assignments that use role_name (not role_definition_id)
+  # Use index-based keys to avoid dynamic key issues
   for_each = {
-    for assignment in var.assignments : 
-      "${assignment.scope}-${assignment.role_name}" => assignment
+    for idx, assignment in var.assignments :
+    "role-${idx}" => assignment
     if assignment.role_name != null && assignment.role_name != ""
   }
 
   # Lookup by role name (used for built-in or custom named roles)
-  name  = each.value.role_name
+  name = each.value.role_name
 
   # Scope where to look for the role
   scope = each.value.scope
@@ -52,11 +52,10 @@ data "azurerm_role_definition" "lookup" {
 # Role assignment block
 # -------------------------------
 resource "azurerm_role_assignment" "this" {
-  # Create a unique key for each assignment
-  # Format: "<scope>-<principal_id>-<role_name or role_definition_id>"
+  # Create a unique key for each assignment using index
   for_each = {
-    for assignment in var.assignments : 
-      "${assignment.scope}-${assignment.principal_id}-${assignment.role_name != null ? assignment.role_name : assignment.role_definition_id}" => assignment
+    for idx, assignment in var.assignments :
+    "assignment-${idx}" => assignment
   }
 
   # The scope at which the role is being assigned
@@ -64,8 +63,8 @@ resource "azurerm_role_assignment" "this" {
 
   # Role definition ID to assign (resolved dynamically using coalesce logic below)
   role_definition_id = coalesce(
-    # 1. Try to use the role ID from the `data.azurerm_role_definition.lookup` (lookup by name)
-    try(data.azurerm_role_definition.lookup["${each.value.scope}-${each.value.role_name}"].id, null),
+    # 1. Try to use the role ID from the `data.azurerm_role_definition.lookup` (lookup by index)
+    try(data.azurerm_role_definition.lookup["role-${index(var.assignments, each.value)}"].id, null),
 
     # 2. If not found, check if the role was created as a custom role earlier in this module
     try(azurerm_role_definition.custom[each.value.role_name].role_definition_resource_id, null),

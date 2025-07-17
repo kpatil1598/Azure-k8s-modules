@@ -5,7 +5,7 @@ resource "azurerm_virtual_network" "this" {
   resource_group_name = var.resource_group_name
   address_space       = var.vnet_cidrs
   tags                = var.tags
- # enable_ipv6         = true
+  # enable_ipv6         = true
 }
 
 ## working one ##
@@ -35,7 +35,7 @@ resource "azurerm_subnet" "this" {
     each.value.cidr,
     each.value.ipv6_cidr
   ])
-  
+
 
   # Uncomment for AKS delegation if needed
   # delegation {

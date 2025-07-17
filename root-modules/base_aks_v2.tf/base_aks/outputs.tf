@@ -9,7 +9,7 @@ output "cluster_name" {
 }
 output "identity_principal_id" {
   description = "Managed identity for AKS cluster"
-  value       = azurerm_kubernetes_cluster.aks.identity[0].principal_id  
+  value       = azurerm_kubernetes_cluster.aks.identity[0].principal_id
 }
 output "issuer_url" {
   description = "Issuer URL for the AKS cluster"

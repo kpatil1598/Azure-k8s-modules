@@ -35,7 +35,7 @@ locals {
   base_mask_ipv6 = tonumber(regex("\\/(\\d+)$", var.vnet_cidrs[1])[0])
 
   private_ipv4_bits = var.ipv4_subnet_mask_private - local.base_mask_ipv4
-  public_ipv4_bits  = var.ipv4_subnet_mask_public  - local.base_mask_ipv4
+  public_ipv4_bits  = var.ipv4_subnet_mask_public - local.base_mask_ipv4
   ipv6_bits         = var.ipv6_subnet_mask_private - local.base_mask_ipv6
 
   # Total available subnets of /26 in base /20

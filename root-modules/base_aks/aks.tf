@@ -19,10 +19,10 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   network_profile {
-    network_plugin    = "azure"
-    ip_versions       = ["IPv4","IPv6"]
-    load_balancer_sku = "standard"
-    network_plugin_mode = "overlay" 
+    network_plugin      = "azure"
+    ip_versions         = ["IPv4", "IPv6"]
+    load_balancer_sku   = "standard"
+    network_plugin_mode = "overlay"
     #docker_bridge_cidr  = "172.17.0.1/16"
     service_cidr   = "10.1.0.0/20"
     dns_service_ip = "10.1.0.10"
