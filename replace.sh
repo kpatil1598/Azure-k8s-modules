@@ -8,6 +8,6 @@ locals {
 metadata = merge(
   local.sanitized_tags,
   {
-    "Name" = "${module.community_label_default.id}-${var.location_short}-${var.storage_account_ai_transcribe_container_name}"
+    "Name" = "${module.community_label_default.id}-${var.location_short}-${var.storage_account_container_name}"
   }
 )
