@@ -133,3 +133,12 @@ output "version" {
 output "plan" {
   value = local.selected_image.plan
 }
+
+dynamic "plan" {
+  for_each = module.image.plan != null ? [module.image.plan] : []
+  content {
+    publisher = plan.value.publisher
+    product   = plan.value.product
+    name      = plan.value.name
+  }
+}
