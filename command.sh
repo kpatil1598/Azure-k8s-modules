@@ -1,1 +1,17 @@
-terraform import 'module.cortexstorage.azurerm_key_vault_key.regional_storage_account_vault_key' '/subscriptions/c192a22f-592e-4875-aa6d-da4466dc039c/resourceGroups/Rg-olinfra-d-CortexStorage/providers/Microsoft.KeyVault/vaults/cortex-olinfra-d-cus-key/keys/cortex-olinfra-d-cus-storage-account-key-vault-key'
+az storage share-rm list \
+  --resource-group example-rg \
+  --storage-account eaadcusfs \
+  --include-deleted \
+  --query "[].{Name:name, Deleted:deleted, DeletedTime:deletedTime}"
+
+az storage share-rm delete \
+  --resource-group example-rg \
+  --storage-account eaadcusfs \
+  --name <share-name> \
+  --yes \
+  --include-leases
+
+az storage share-rm list \
+  --resource-group example-rg \
+  --storage-account eaadcusfs \
+  --include-deleted
