@@ -2,7 +2,7 @@
 set -euo pipefail
 
 usage() { cat <<'EOF'
-Sequential Nomad allocation restarter (one allocation at a time).
+Sequential Nomad allocation restarter (CLI-only; no HTTP API).
 
 Usage:
   seq_nomad_restart.sh --job <JOB_ID> [--task <TASK_NAME>] [--ns <NAMESPACE>]
@@ -21,14 +21,13 @@ Options:
   --ready-http-code  Expected HTTP status code (default: 200)
   --ready-http-timeout Seconds per HTTP request (default: 5)
 
-Requires: nomad CLI, jq. curl is required only if --ready-http-url is used.
+Requires: nomad CLI. curl is required only if --ready-http-url is used. jq is used only for optional debug output.
 EOF
 }
 
 # ---------- args ----------
 JOB=""; TASK=""; NS=""; TIMEOUT=300; SLEEP=5; STRICT_HEALTH=false
 READY_HTTP_URL=""; READY_HTTP_CODE="200"; READY_HTTP_TIMEOUT=5
-
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --job) JOB="${2:-}"; shift 2 ;;
@@ -47,116 +46,102 @@ done
 
 [[ -z "$JOB" ]] && { echo "Error: --job is required"; usage; exit 1; }
 command -v nomad >/dev/null || { echo "Error: nomad CLI not found"; exit 1; }
-command -v jq >/dev/null || { echo "Error: jq not found"; exit 1; }
 if [[ -n "$READY_HTTP_URL" ]]; then
   command -v curl >/dev/null || { echo "Error: curl not found (needed for --ready-http-url)"; exit 1; }
 fi
 
-# Namespace flag for CLI (used by alloc restart)
+# Namespace flag for CLI
 NS_FLAG=()
 [[ -n "$NS" ]] && NS_FLAG=( -namespace="$NS" )
 
-# ---------- helpers ----------
 now() { date +%s; }
 
-api() {
-  # Wrapper over Nomad HTTP API via CLI; respects NOMAD_ADDR/NOMAD_TOKEN
-  # Usage: api /v1/path
-  local path="$1"
-  if [[ -n "$NS" ]]; then
-    if [[ "$path" == *\?* ]]; then
-      nomad operator api "${path}&namespace=${NS}"
-    else
-      nomad operator api "${path}?namespace=${NS}"
-    fi
-  else
-    nomad operator api "$path"
-  fi
-}
-
-get_allocations() {
-  # Return running alloc IDs for the job, in creation order
-  api "/v1/job/$JOB/allocations" \
-  | jq -r 'sort_by(.CreateTime // 0) | .[] | select((.DesiredStatus=="run") and (.ClientStatus=="running")) | .ID'
-}
-
-task_exists_in_alloc() {
-  local alloc="$1" task="$2"
-  local js
-  js=$(api "/v1/allocation/$alloc" || true)
-  [[ -z "$js" ]] && return 1
-  jq -e --arg t "$task" '.TaskStates | has($t)' >/dev/null <<<"$js"
-}
-
 http_ready() {
-  # Uses global READY_HTTP_* vars; no-op if URL is empty
   [[ -z "$READY_HTTP_URL" ]] && return 0
   local code
   code=$(curl -fsS --max-time "$READY_HTTP_TIMEOUT" -o /dev/null -w '%{http_code}' "$READY_HTTP_URL" || true)
   [[ "$code" == "$READY_HTTP_CODE" ]]
 }
 
-# ---- Readiness checks ----
-is_task_ready() {
+# ---- Introspection via CLI templates (TSV) ----
+# get_allocations: prints allocation IDs (one per line), filtered and sorted by CreateTime.
+get_allocations() {
+  # Fields: ID, DesiredStatus, ClientStatus, CreateTime
+  local tmpl='{{range .Allocations}}{{.ID}}\t{{.DesiredStatus}}\t{{.ClientStatus}}\t{{.CreateTime}}{{"\n"}}{{end}}'
+  local out
+  if ! out=$(nomad job status "${NS_FLAG[@]}" -t "$tmpl" "$JOB" 2>/dev/null || true); then
+    out=""
+  fi
+  # Filter run/running, sort by CreateTime numeric, print ID
+  awk -F'\t' '$2=="run" && $3=="running" {print $0}' <<<"$out" | sort -n -k4 | awk -F'\t' '{print $1}'
+}
+
+# emit_task_states: prints TSV lines for tasks in an allocation:
+# taskName \t State \t Healthy \t Failed
+emit_task_states() {
+  local alloc="$1"
+  local tmpl='{{- range $k,$v := .TaskStates -}}{{$k}}{{"\t"}}{{$v.State}}{{"\t"}}{{if ne $v.Healthy nil}}{{$v.Healthy}}{{else}}NA{{end}}{{"\t"}}{{if ne $v.Failed nil}}{{$v.Failed}}{{else}}false{{end}}{{"\n"}}{{- end -}}'
+  nomad alloc status "${NS_FLAG[@]}" -t "$tmpl" "$alloc" 2>/dev/null || true
+}
+
+task_exists_in_alloc() {
   local alloc="$1" task="$2"
-  local js state healthy failed
-  js=$(api "/v1/allocation/$alloc" || true)
-  [[ -z "$js" ]] && return 1
+  emit_task_states "$alloc" | awk -F'\t' -v t="$task" '$1==t{found=1} END{exit found?0:1}'
+}
 
-  state=$(jq -r --arg t "$task" '.TaskStates[$t].State // ""' <<<"$js")
-  healthy=$(jq -r --arg t "$task" '.TaskStates[$t].Healthy // empty' <<<"$js")
-  failed=$(jq -r --arg t "$task" '.TaskStates[$t].Failed // false' <<<"$js")
-
-  # Always require state==running
+# readiness for a single task line (given columns)
+_task_line_ready() {
+  # args: state healthy failed
+  local state="$1" healthy="$2" failed="$3"
   [[ "$state" == "running" ]] || return 1
-
-  # If strict, require positive health
   if $STRICT_HEALTH; then
     [[ "$failed" == "true" ]] && return 1
     [[ "$healthy" == "false" ]] && return 1
   fi
+  return 0
+}
 
-  # Optional HTTP probe
+# is_task_ready: check target task in alloc
+is_task_ready() {
+  local alloc="$1" task="$2"
+  local line
+  line=$(emit_task_states "$alloc" | awk -F'\t' -v t="$task" '$1==t{print; found=1} END{if(!found) exit 1}')
+  [[ -z "${line:-}" ]] && return 1
+  local state healthy failed
+  state=$(awk -F'\t' '{print $2}' <<<"$line")
+  healthy=$(awk -F'\t' '{print $3}' <<<"$line")
+  failed=$(awk -F'\t' '{print $4}' <<<"$line")
+  _task_line_ready "$state" "$healthy" "$failed" || return 1
   http_ready
 }
 
+# is_alloc_ready: ALL tasks in the allocation must be ready (state-only or strict-health); then optional HTTP probe
 is_alloc_ready() {
   local alloc="$1"
-  local js
-  js=$(api "/v1/allocation/$alloc" || true)
-  [[ -z "$js" ]] && return 1
-
-  if $STRICT_HEALTH; then
-    jq -e '
-      .TaskStates as $ts
-      | [ keys[] as $k
-          | ($ts[$k].State=="running")
-            and (($ts[$k].Failed // false)==false)
-            and (($ts[$k].Healthy // true)!=false)
-        ] | all
-    ' >/dev/null <<<"$js"
-  else
-    jq -e '
-      .TaskStates as $ts
-      | [ keys[] as $k | ($ts[$k].State=="running") ] | all
-    ' >/dev/null <<<"$js"
-  fi
+  local ok=true
+  while IFS=$'\t' read -r tname state healthy failed; do
+    [[ -z "$tname" ]] && continue
+    if ! _task_line_ready "$state" "$healthy" "$failed"; then
+      ok=false; break
+    fi
+  done < <(emit_task_states "$alloc")
+  $ok || return 1
+  http_ready
 }
 
-# ---- Waiters ----
 wait_for_task() {
   local alloc="$1" task="$2"
   local start_ts
   start_ts=$(now)
-
   while true; do
     if is_task_ready "$alloc" "$task"; then
       echo "✅ Allocation $alloc task $task is ready."
       return 0
     fi
     if (( $(now) - start_ts > TIMEOUT )); then
-      echo "❌ Timeout waiting for allocation $alloc task $task (state/health/http)."
-      api "/v1/allocation/$alloc" | jq '{ClientStatus, DesiredStatus, TaskStates}'
+      echo "❌ Timeout waiting for allocation $alloc task $task (state/health/http). Snapshot:"
+      # Best-effort snapshot (human format)
+      nomad alloc status "${NS_FLAG[@]}" "$alloc" || true
       return 1
     fi
     sleep "$SLEEP"
@@ -167,18 +152,14 @@ wait_for_all_tasks_in_alloc() {
   local alloc="$1"
   local start_ts
   start_ts=$(now)
-
   while true; do
     if is_alloc_ready "$alloc"; then
-      # Optional HTTP probe (if you want alloc-wide HTTP probe, reuse READY_HTTP_URL)
-      if http_ready; then
-        echo "✅ Allocation $alloc is ready."
-        return 0
-      fi
+      echo "✅ Allocation $alloc is ready."
+      return 0
     fi
     if (( $(now) - start_ts > TIMEOUT )); then
-      echo "❌ Timeout waiting for allocation $alloc (state/health/http)."
-      api "/v1/allocation/$alloc" | jq '{ClientStatus, DesiredStatus, TaskStates}'
+      echo "❌ Timeout waiting for allocation $alloc (state/health/http). Snapshot:"
+      nomad alloc status "${NS_FLAG[@]}" "$alloc" || true
       return 1
     fi
     sleep "$SLEEP"
@@ -218,11 +199,6 @@ fi
 
 echo "Found ${#allocs[@]} running allocation(s):"
 printf ' - %s\n' "${allocs[@]}"; echo
-
-# Safety: ensure at least 2 allocs if you're touching prod; comment out if not desired.
-# if [[ ${#allocs[@]} -lt 2 ]]; then
-#   echo "⚠️ Only ${#allocs[@]} allocation(s) found; consider ensuring redundancy before rolling restart."
-# fi
 
 for alloc in "${allocs[@]}"; do
   restart_alloc_task "$alloc" "$TASK"
