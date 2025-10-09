@@ -1,0 +1,176 @@
+
+
+# Sequential Nomad Allocation Restarter — Handover Manual
+
+ 1) Purpose
+
+Use `seq_nomad_restart.sh` to restart a Nomad job’s allocations **one at a time**. The script waits for readiness after each restart before moving on. It targets **older Nomad CLIs** that don’t support `-json` or `-t`.
+
+2) What it does
+
+* Finds **running** allocations for the job (optionally within a namespace).
+* Restarts either a **specific task** in each allocation (`--task`) or the **entire allocation**.
+* Waits until the target (task or all tasks) is `running` again (state-only).
+* Optionally pauses between allocations (`--wait-after`).
+
+> Readiness here is **state-only**: it checks for `running` in `nomad alloc status`. It does not parse health flags on old CLIs.
+
+3) Requirements
+
+* `nomad` CLI in `PATH`.
+* Rights to run `nomad job status`, `nomad alloc status`, and `nomad alloc restart`.
+* Works without `-json` or `-t`.
+* Bash 4+.
+
+4) Install
+
+1. Save the script as `seq_nomad_restart.sh`.
+2. Make it executable:
+
+   ```bash
+   chmod +x seq_nomad_restart.sh
+   ```
+3. (Optional) Put it on your PATH:
+
+   ```bash
+   sudo mv seq_nomad_restart.sh /usr/local/bin/
+   ```
+
+5) Usage (quick)
+
+```bash
+seq_nomad_restart.sh --job <JOB_ID> [--task <TASK_NAME>] [--ns <NAMESPACE>] \
+                     [--timeout 300] [--sleep 5] [--wait-after 0]
+```
+
+### Options
+
+* `--job` (required): Nomad job ID or unique prefix.
+* `--task` (optional): Restart **only** this task per allocation.
+
+  * If omitted: restarts the **entire allocation**; **all** tasks must return to `running`.
+* `--ns` (optional): Nomad namespace.
+* `--timeout` (default `300s`): Max wait per allocation to reach readiness.
+* `--sleep` (default `5s`): Poll interval.
+* `--wait-after` (default `0s`): Pause between allocations.
+
+6) Examples
+
+**Restart whole allocations:**
+
+```bash
+seq_nomad_restart.sh --job payments-api
+```
+
+**Restart a specific task “app” in each allocation:**
+
+```bash
+seq_nomad_restart.sh --job payments-api --task app
+```
+
+**Include namespace:**
+
+```bash
+seq_nomad_restart.sh --job payments-api --ns prod
+```
+
+**Longer timeout + staggered cadence:**
+
+```bash
+seq_nomad_restart.sh --job payments-api --wait-after 15 --timeout 600 --sleep 5
+```
+
+7) What you’ll see
+
+* A list of allocations discovered.
+* For each allocation, a restart step and readiness check.
+* Success looks like:
+
+  ```
+  ✅ Allocation 46a0b02e is ready.
+  ```
+* On timeout, the script prints the allocation’s status for fast diagnosis and exits non-zero.
+
+8) Readiness logic (state-only)
+
+* With `--task`: that task in the allocation must be `running`.
+* Without `--task`: **all** tasks in the allocation must be `running`.
+* Parses the **Task States** section of `nomad alloc status`. Health flags are not considered.
+
+If you need HTTP health checks, run them **after** this script as a separate step.
+
+9) Exit codes
+
+* `0`: All allocations restarted and ready.
+* `1`: CLI missing or invalid usage.
+* `>0`: Timeout or tasks failed to return to `running`.
+
+10) Ops tips
+
+* Use `--task` to avoid flakiness from non-critical sidecars.
+* Set `--timeout` and `--sleep` to match startup time.
+* Use `--wait-after` to reduce downstream load spikes.
+* Always pass `--ns` if you use non-default namespaces.
+
+11) Troubleshooting
+
+**“No running allocations found…”**
+
+* Verify job and namespace:
+
+  ```bash
+  nomad job status -namespace="prod" payments-api
+  ```
+* The script selects allocations where **Desired=run** and **Status=running** in the **Allocations** table.
+
+**Timeouts after restart**
+
+* Inspect alloc logs/events for why tasks didn’t reach `running`.
+* Increase `--timeout`.
+* Try `--task <MAIN_TASK_NAME>` if only the main task matters.
+
+**Old CLI “flag provided but not defined: -json”**
+
+* This script **does not** use `-json` or `-t` and works fine on old CLIs.
+* With newer CLIs you can later move to a JSON/template version.
+
+**ACL/permissions**
+
+* Ensure your token/env permits `job status`, `alloc status`, and `alloc restart`.
+
+12) Safety and rollback
+
+* Restarts **one allocation at a time**.
+* Stops on failure and prints the failing allocation’s status.
+* To roll back, redeploy a previous job version or follow your normal rollback runbook.
+
+13) FAQ
+
+**Dry-run?** No. It performs real restarts.
+**Target specific allocs?** Not in this version; it restarts all **running** allocs for the job.
+**Add HTTP checks?** Extend after the `wait_for_*` functions in the script, or run them separately.
+
+14) Script header (reference)
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Sequential Nomad allocation restarter for old CLIs (no -json, no -t).
+# Restarts per allocation, waits for readiness (state-only), moves on.
+```
+
+15) Change log (fill as you update)
+
+* v1.0 — Initial handover manual and script
+* v1.1 — …
+* v1.2 — …
+
+16) Contacts
+
+* Primary Owner: <name / team / channel>
+* Backup: <name / team / channel>
+
+---
+
+If you’d like this as a Word (.docx), I can also export the same content to .docx.
